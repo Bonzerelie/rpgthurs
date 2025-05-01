@@ -1,79 +1,99 @@
-const startScreen = document.getElementById('start-screen');
-const gameScreen = document.getElementById('game-screen');
-const noteButtonsContainer = document.getElementById('note-buttons-container');
-const promptText = document.getElementById('prompt');
-const playRefBtn = document.getElementById('play-reference');
-const replayNoteBtn = document.getElementById('replay-note');
-const nextBtn = document.getElementById('next-button');
-const resetScoreBtn = document.getElementById('reset-score');
-const backButton = document.getElementById('back-button');
-const displayNotesBtn = document.getElementById('display-notes');
-const displayDegreesBtn = document.getElementById('display-degrees');
-const scaleLabel = document.getElementById('scale-label');
-const octaveLabel = document.getElementById('octave-label');
-const correctCount = document.getElementById('correct-count');
-const incorrectCount = document.getElementById('incorrect-count');
-const totalCount = document.getElementById('total-count');
-const accuracyDisplay = document.getElementById('accuracy');
+const startScreen = document.getElementById("start-screen");
+const gameScreen = document.getElementById("game-screen");
+const noteButtonsDiv = document.getElementById("note-buttons");
+const scoreDisplay = document.getElementById("score");
+const nextButton = document.getElementById("next-button");
+const noteModeBtn = document.getElementById("noteModeBtn");
+const degreeModeBtn = document.getElementById("degreeModeBtn");
 
-const noteMap = {
-  'C': ['c4', 'c5'],
-  'D': ['d4'],
-  'E': ['e4'],
-  'F': ['f4'],
-  'G': ['g4'],
-  'A': ['a4'],
-  'B': ['b4']
-};
-
-const degreeMap = {
-  'C': '1st',
-  'D': '2nd',
-  'E': '3rd',
-  'F': '4th',
-  'G': '5th',
-  'A': '6th',
-  'B': '7th'
-};
-
-let currentNote = '';
-let audio = new Audio();
-let correct = 0;
-let incorrect = 0;
-let isAnswered = false;
-let showDegrees = false;
-let currentMode = 7;
 let currentNotes = [];
+let correctNote = "";
+let displayMode = "note";
+let score = 0;
+let total = 0;
+let fullOctaveMode = false;
 
-function getNoteName(filename) {
-  for (const [name, files] of Object.entries(noteMap)) {
-    if (files.includes(filename)) return name;
-  }
-  return '';
+const noteMap = ["C", "D", "E", "F", "G", "A", "B"];
+const scaleDegrees = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th"];
+
+function startGame(noteCount) {
+  fullOctaveMode = (noteCount === 8);
+  currentNotes = fullOctaveMode ? 
+    ["c4", "d4", "e4", "f4", "g4", "a4", "b4", "c5"] : 
+    noteMap.slice(0, noteCount).map(n => n.toLowerCase() + "4");
+
+  score = 0;
+  total = 0;
+  updateScore();
+  startScreen.style.display = "none";
+  gameScreen.style.display = "block";
+  setDisplayMode(displayMode);
+  nextNote();
 }
 
-function playNote(noteFile) {
-  audio.src = `audio/${noteFile}.mp3`;
+function playNote() {
+  const audio = new Audio(`audio/${correctNote}.mp3`);
   audio.play();
 }
 
-function updateNoteButtonLabels() {
-  const buttons = noteButtonsContainer.querySelectorAll('.blue-button');
-  buttons.forEach(btn => {
-    const note = btn.getAttribute('data-note');
-    btn.textContent = showDegrees ? degreeMap[note] : note;
+function playReferenceNote() {
+  const audio = new Audio("audio/c4.mp3");
+  audio.play();
+}
+
+function nextNote() {
+  const randomIndex = Math.floor(Math.random() * currentNotes.length);
+  correctNote = currentNotes[randomIndex];
+  playNote();
+  generateNoteButtons();
+  nextButton.disabled = true;
+}
+
+function generateNoteButtons() {
+  noteButtonsDiv.innerHTML = "";
+  const options = fullOctaveMode ? noteMap : noteMap.slice(0, currentNotes.length);
+  options.forEach((note, i) => {
+    const button = document.createElement("button");
+    button.textContent = displayMode === "note" ? note : scaleDegrees[i];
+    button.onclick = () => handleAnswer(note);
+    noteButtonsDiv.appendChild(button);
   });
 }
 
-function buildNoteButtons() {
-  noteButtonsContainer.innerHTML = '';
-  const keys = Object.keys(noteMap).slice(0, currentMode === 8 ? 7 : currentMode);
-  currentNotes = keys.map(key => noteMap[key][0]);
+function handleAnswer(selected) {
+  const correctName = correctNote.startsWith("c5") ? "C" : correctNote[0].toUpperCase();
+  const correctDisplay = displayMode === "note" ? correctName : scaleDegrees[noteMap.indexOf(correctName)];
+  const selectedDisplay = displayMode === "note" ? selected : scaleDegrees[noteMap.indexOf(selected)];
 
-  if (currentMode === 8) {
-    currentNotes.push('c5');
+  if (selected === correctName) {
+    alert(`Correct! That was ${correctDisplay}`);
+    score++;
+  } else {
+    alert(`Incorrect. That was ${correctDisplay}`);
   }
+  total++;
+  updateScore();
+  nextButton.disabled = false;
+}
 
-  keys.forEach
-::contentReference[oaicite:21]{index=21}
- 
+function updateScore() {
+  scoreDisplay.textContent = `Score: ${score} / ${total}`;
+}
+
+function resetScore() {
+  score = 0;
+  total = 0;
+  updateScore();
+}
+
+function goBack() {
+  gameScreen.style.display = "none";
+  startScreen.style.display = "block";
+}
+
+function setDisplayMode(mode) {
+  displayMode = mode;
+  noteModeBtn.classList.toggle("active", mode === "note");
+  degreeModeBtn.classList.toggle("active", mode === "degree");
+  generateNoteButtons();
+}
