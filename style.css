@@ -1,53 +1,74 @@
 body {
-  font-family: sans-serif;
+  font-family: Arial, sans-serif;
   text-align: center;
   padding: 20px;
-  background: #f4f4f4;
+  background-color: #f4f4f4;
 }
 
-button {
-  margin: 5px;
-  padding: 10px 20px;
+h1, h2 {
+  margin-bottom: 20px;
+}
+
+#mode-buttons button,
+#toggle-buttons button,
+#controls button,
+.bottom-buttons button {
+  margin: 10px;
+  padding: 12px 20px;
   font-size: 16px;
-  border: none;
-  border-radius: 8px;
-  background-color: #007bff;
-  color: white;
   cursor: pointer;
+  border: none;
+  background-color: #3498db;
+  color: white;
+  border-radius: 8px;
+  transition: background-color 0.3s;
 }
 
-button:hover {
-  background-color: #0056b3;
+#mode-buttons button:hover,
+#toggle-buttons button:hover,
+#controls button:hover,
+.bottom-buttons button:hover {
+  background-color: #2980b9;
 }
 
-button.disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+#toggle-buttons {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 
-.hidden {
-  display: none;
+#toggle-buttons button {
+  flex: 1;
+  max-width: 140px;
+}
+
+#toggle-buttons button.active {
+  background-color: #2ecc71;
 }
 
 #note-buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 10px;
   margin: 20px 0;
 }
 
+#note-buttons button {
+  height: 60px;
+}
+
 #controls {
+  margin: 20px 0;
+}
+
+.bottom-buttons {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
 }
 
-#toggle-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-#toggle-buttons button.active {
-  background-color: #28a745;
+#score {
+  margin: 20px 0;
+  font-weight: bold;
 }
