@@ -1,174 +1,188 @@
-// Define game modes
-const modes = {
-    mode1: { notes: ['C4', 'D4'], displayText: 'Notes C and D from one octave' },
-    mode2: { notes: ['C4', 'D4', 'E4'], displayText: 'Notes C, D and E from one octave' },
-    mode3: { notes: ['C4', 'D4', 'E4', 'F4'], displayText: 'Notes C, D, E and F from one octave' },
-    mode4: { notes: ['C4', 'D4', 'E4', 'F4', 'G4'], displayText: 'Notes C, D, E, F and G from one octave' },
-    mode5: { notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], displayText: 'Notes C, D, E, F, G and A from one octave' },
-    mode6: { notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'], displayText: 'Notes C, D, E, F, G, A and B from one octave' },
-    mode7: { notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'], displayText: 'One Octave (notes C4 to C5)' },
-    mode8: { notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'], displayText: 'One Octave (notes C4 to C5)' }
-};
-
-let currentMode;
-let currentScore = 0;
-let currentNoteIndex = 0;
-let currentNote;
-let noteOptions = [];
-let noteAnswerButtons = [];
-let correctAnswer;
-
-// Get elements from HTML
-const backButton = document.getElementById('back-button');
-const resetScoreButton = document.getElementById('reset-score');
-const nextButton = document.getElementById('next-button');
-const noteRangeText = document.getElementById('octave-label');
-const noteOptionsDiv = document.getElementById('note-buttons-container');
 const startScreen = document.getElementById('start-screen');
 const gameScreen = document.getElementById('game-screen');
-const correctCountSpan = document.getElementById('correct-count');
-const incorrectCountSpan = document.getElementById('incorrect-count');
-const totalCountSpan = document.getElementById('total-count');
-const accuracySpan = document.getElementById('accuracy');
+const noteButtonsContainer = document.getElementById('note-buttons-container');
+const promptText = document.getElementById('prompt');
+const playRefBtn = document.getElementById('play-reference');
+const replayNoteBtn = document.getElementById('replay-note');
+const nextBtn = document.getElementById('next-button');
+const resetScoreBtn = document.getElementById('reset-score');
+const backButton = document.getElementById('back-button');
+const displayNotesBtn = document.getElementById('display-notes');
+const displayDegreesBtn = document.getElementById('display-degrees');
+const scaleLabel = document.getElementById('scale-label');
+const octaveLabel = document.getElementById('octave-label');
+const correctCount = document.getElementById('correct-count');
+const incorrectCount = document.getElementById('incorrect-count');
+const totalCount = document.getElementById('total-count');
+const accuracyDisplay = document.getElementById('accuracy');
 
-let correctCount = 0;
-let incorrectCount = 0;
-let totalCount = 0;
+const noteMap = {
+  'C': ['c4', 'c5'],
+  'D': ['d4'],
+  'E': ['e4'],
+  'F': ['f4'],
+  'G': ['g4'],
+  'A': ['a4'],
+  'B': ['b4']
+};
 
-// Function to show the start screen
-function showStartScreen() {
-    startScreen.classList.remove('hidden');
-    gameScreen.classList.add('hidden');
+const degreeMap = {
+  'C': '1st',
+  'D': '2nd',
+  'E': '3rd',
+  'F': '4th',
+  'G': '5th',
+  'A': '6th',
+  'B': '7th'
+};
+
+let currentNote = '';
+let audio = new Audio();
+let correct = 0;
+let incorrect = 0;
+let isAnswered = false;
+let showDegrees = false;
+let currentMode = 8;
+let currentNotes = [];
+
+function getNoteName(filename) {
+  for (const [name, files] of Object.entries(noteMap)) {
+    if (files.includes(filename)) return name;
+  }
+  return '';
 }
 
-// Function to show the game screen
-function showGameScreen() {
+function playNote(noteFile) {
+  audio.src = `audio/${noteFile}.mp3`;
+  audio.play();
+}
+
+function updateNoteButtonLabels() {
+  const buttons = noteButtonsContainer.querySelectorAll('.blue-button');
+  buttons.forEach(btn => {
+    const note = btn.getAttribute('data-note');
+    btn.textContent = showDegrees ? degreeMap[note] : note;
+  });
+}
+
+function buildNoteButtons() {
+  noteButtonsContainer.innerHTML = '';
+  const keys = Object.keys(noteMap).slice(0, currentMode);
+  currentNotes = keys.map(key => noteMap[key][0]);
+
+  keys.forEach(note => {
+    const btn = document.createElement('button');
+    btn.className = 'blue-button';
+    btn.setAttribute('data-note', note);
+    btn.textContent = showDegrees ? degreeMap[note] : note;
+    btn.addEventListener('click', handleAnswer);
+    noteButtonsContainer.appendChild(btn);
+  });
+}
+
+function loadNewNote() {
+  isAnswered = false;
+  buildNoteButtons();
+  const buttons = noteButtonsContainer.querySelectorAll('.blue-button');
+  buttons.forEach(btn => {
+    btn.disabled = false;
+    btn.classList.remove('correct', 'incorrect');
+  });
+  const candidates = [...currentNotes];
+  if (currentMode === 8) candidates.push('c5'); // Add high C for entire octave
+  currentNote = candidates[Math.floor(Math.random() * candidates.length)];
+  playNote(currentNote);
+  promptText.textContent = 'Which note was played?';
+  nextBtn.disabled = true;
+}
+
+function handleAnswer(e) {
+  if (isAnswered) return;
+  isAnswered = true;
+
+  const selected = e.target.getAttribute('data-note');
+  const correctName = getNoteName(currentNote);
+
+  if (selected === correctName) {
+    correct++;
+    e.target.classList.add('correct');
+    promptText.textContent = showDegrees
+      ? `Correct! ✅ The note was the ${degreeMap[correctName]} scale degree`
+      : `Correct! ✅ The note was ${correctName}`;
+  } else {
+    incorrect++;
+    e.target.classList.add('incorrect');
+    const correctBtn = [...noteButtonsContainer.querySelectorAll('.blue-button')]
+      .find(btn => btn.getAttribute('data-note') === correctName);
+    if (correctBtn) correctBtn.classList.add('correct');
+    promptText.textContent = showDegrees
+      ? `Incorrect! ❌ The note was the ${degreeMap[correctName]} scale degree`
+      : `Incorrect! ❌ The note played was actually ${correctName}`;
+  }
+
+  updateScore();
+  nextBtn.disabled = false;
+  [...noteButtonsContainer.querySelectorAll('.blue-button')].forEach(btn => btn.disabled = true);
+}
+
+function updateScore() {
+  const total = correct + incorrect;
+  correctCount.textContent = correct;
+  incorrectCount.textContent = incorrect;
+  totalCount.textContent = total;
+  accuracyDisplay.textContent = total ? ((correct / total) * 100).toFixed(1) + '%' : '0.0%';
+}
+
+function resetScore() {
+  correct = 0;
+  incorrect = 0;
+  updateScore();
+}
+
+function toggleDisplay(mode) {
+  showDegrees = mode === 'degrees';
+  updateNoteButtonLabels();
+  displayNotesBtn.classList.toggle('selected', !showDegrees);
+  displayDegreesBtn.classList.toggle('selected', showDegrees);
+
+  scaleLabel.textContent = showDegrees
+    ? 'Diatonic notes of the Major Scale (Ionian Mode)'
+    : 'Diatonic notes of the C Major Scale (Ionian Mode)';
+
+  const textOptions = {
+    2: 'Notes C and D from one octave',
+    3: 'Notes C, D and E from one octave',
+    4: 'Notes C, D, E and F from one octave',
+    5: 'Notes C, D, E, F and G from one octave',
+    6: 'Notes C, D, E, F, G and A from one octave',
+    7: 'Notes C, D, E, F, G, A and B from one octave',
+    8: 'One Octave (Notes C4 to C5)'
+  };
+
+  octaveLabel.textContent = textOptions[currentMode];
+  playRefBtn.textContent = showDegrees ? 'Play Reference (Tonic)' : 'Play Reference (C - Tonic)';
+  promptText.textContent = 'Which note was played?';
+}
+
+document.querySelectorAll('.mode-button').forEach(btn =>
+  btn.addEventListener('click', () => {
+    currentMode = parseInt(btn.getAttribute('data-mode'), 10);
     startScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
-}
+    resetScore();
+    toggleDisplay('notes');
+    loadNewNote();
+  })
+);
 
-// Function to start the game with a specific mode
-function startGame(mode) {
-    currentMode = mode;
-    currentNoteIndex = 0;
-    noteOptions = [...modes[mode].notes];
-    correctAnswer = null;
-    noteAnswerButtons = [];
-    nextButton.disabled = true;
-    updateNoteDisplay();
-    showGameScreen();
-    nextNote();
-}
-
-// Update the note display text according to the mode selected
-function updateNoteDisplay() {
-    noteRangeText.textContent = modes[currentMode].displayText;
-}
-
-// Handle logic for next note
-function nextNote() {
-    currentNote = noteOptions[Math.floor(Math.random() * noteOptions.length)];
-    playNoteAudio(currentNote);
-    generateAnswerOptions();
-    nextButton.disabled = true;
-}
-
-// Generate the possible answer options
-function generateAnswerOptions() {
-    noteOptionsDiv.innerHTML = '';
-    const allOptions = [...new Set([correctAnswer, ...shuffleArray(noteOptions).slice(0, 3)])];
-    shuffleArray(allOptions);
-
-    allOptions.forEach(option => {
-        const button = document.createElement('button');
-        button.className = 'blue-button';
-        button.textContent = option.replace(/[0-9]/g, ''); // Remove octave for display
-        button.onclick = () => checkAnswer(option, button);
-        noteOptionsDiv.appendChild(button);
-        noteAnswerButtons.push(button);
-    });
-}
-
-// Check if the selected answer is correct
-function checkAnswer(selected, button) {
-    disableAnswerButtons();
-    if (selected === correctAnswer) {
-        button.classList.add('correct');
-        correctCount++;
-    } else {
-        button.classList.add('incorrect');
-        incorrectCount++;
-        // Highlight correct one
-        noteAnswerButtons.forEach(btn => {
-            if (btn.textContent === correctAnswer.replace(/[0-9]/g, '')) {
-                btn.classList.add('correct');
-            }
-        });
-    }
-    totalCount++;
-    updateScore();
-    nextButton.disabled = false;
-}
-
-// Disable buttons after an answer is selected
-function disableAnswerButtons() {
-    noteAnswerButtons.forEach(btn => btn.disabled = true);
-}
-
-// Update score display
-function updateScore() {
-    correctCountSpan.textContent = correctCount;
-    incorrectCountSpan.textContent = incorrectCount;
-    totalCountSpan.textContent = totalCount;
-    accuracySpan.textContent = totalCount > 0 ? ((correctCount / totalCount) * 100).toFixed(1) + '%' : '0.0%';
-}
-
-// Play note audio
-function playNoteAudio(note) {
-    const audio = new Audio(`audio/${note}.mp3`);
-    audio.play();
-    correctAnswer = note;
-}
-
-// Shuffle utility
-function shuffleArray(array) {
-    return array.slice().sort(() => Math.random() - 0.5);
-}
-
-// Handle start screen mode button clicks
-document.querySelectorAll('.mode-button').forEach(button => {
-    button.addEventListener('click', () => {
-        const modeNumber = button.getAttribute('data-mode');
-        const modeKey = 'mode' + modeNumber;
-        startGame(modeKey);
-    });
-});
-
-// Handle next button click
-nextButton.addEventListener('click', () => {
-    nextNote();
-});
-
-// Handle back button click
 backButton.addEventListener('click', () => {
-    resetGame();
-    showStartScreen();
+  gameScreen.classList.add('hidden');
+  startScreen.classList.remove('hidden');
 });
 
-// Handle reset score button click
-resetScoreButton.addEventListener('click', () => {
-    resetGame();
-    updateScore();
-});
-
-function resetGame() {
-    correctCount = 0;
-    incorrectCount = 0;
-    totalCount = 0;
-    noteAnswerButtons = [];
-    noteOptionsDiv.innerHTML = '';
-    nextButton.disabled = true;
-}
-
-// Initialize app
-showStartScreen();
+playRefBtn.addEventListener('click', () => playNote('c4'));
+replayNoteBtn.addEventListener('click', () => playNote(currentNote));
+nextBtn.addEventListener('click', loadNewNote);
+resetScoreBtn.addEventListener('click', resetScore);
+displayNotesBtn.addEventListener('click', () => toggleDisplay('notes'));
+displayDegreesBtn.addEventListener('click', () => toggleDisplay('degrees'));
