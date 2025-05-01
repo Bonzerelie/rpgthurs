@@ -14,7 +14,6 @@
       <div class="start-content">
         <h1>The Relative Pitch Game! 🎹🎶</h1>
         <h2>Diatonic Notes of the Major Scale (Ionian Mode)</h2>
-        <p>One Octave (Notes C4–C5)</p>
         <p>Can you correctly identify which note is played?<br>Use the reference pitch to help!</p>
         <p><strong>How many notes should be included?</strong></p>
         <button class="green-button mode-button" data-mode="2">First 2 notes</button>
@@ -23,14 +22,14 @@
         <button class="green-button mode-button" data-mode="5">First 5 notes</button>
         <button class="green-button mode-button" data-mode="6">First 6 notes</button>
         <button class="green-button mode-button" data-mode="7">First 7 notes</button>
-        <button class="green-button mode-button" data-mode="8">Entire Octave (C4–C5)</button>
+        <button class="green-button mode-button" data-mode="8">Entire Octave</button>
       </div>
     </div>
 
     <!-- Game Screen -->
     <div id="game-screen" class="hidden">
       <h1>The Relative Pitch Game! 🎹🎶</h1>
-      <h2 id="scale-label">Diatonic - C Major Scale</h2>
+      <h2 id="scale-label">Diatonic notes of The Major Scale (Ionian Mode)</h2>
       <p id="octave-label">One Octave (Notes C4–C5)</p>
 
       <div class="controls">
@@ -49,8 +48,10 @@
         <button id="display-degrees" class="toggle-button">Scale Degrees</button>
       </div>
 
-      <button id="back-button" class="green-button back-button">← Back</button>
-      <button id="reset-score" class="green-button">Reset Score</button>
+      <div class="bottom-buttons">
+        <button id="back-button" class="green-button back-button">← Back</button>
+        <button id="reset-score" class="green-button">Reset Score</button>
+      </div>
 
       <div class="scoreboard">
         <p>Score:</p>
@@ -60,7 +61,6 @@
         <p>Accuracy: <span id="accuracy">0.0%</span></p>
       </div>
     </div>
-
   </div>
   <script src="script.js"></script>
 </body>
