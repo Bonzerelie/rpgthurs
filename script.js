@@ -1,177 +1,156 @@
-const noteMap = {
-  'C': ['c4', 'c5'],
-  'D': ['d4'],
-  'E': ['e4'],
-  'F': ['f4'],
-  'G': ['g4'],
-  'A': ['a4'],
-  'B': ['b4']
+// Define game modes
+const modes = {
+    mode1: { notes: ['C4', 'D4'], displayText: 'Notes C and D from one octave' },
+    mode2: { notes: ['C4', 'D4', 'E4'], displayText: 'Notes C, D and E from one octave' },
+    mode3: { notes: ['C4', 'D4', 'E4', 'F4'], displayText: 'Notes C, D, E and F from one octave' },
+    mode4: { notes: ['C4', 'D4', 'E4', 'F4', 'G4'], displayText: 'Notes C, D, E, F and G from one octave' },
+    mode5: { notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], displayText: 'Notes C, D, E, F, G and A from one octave' },
+    mode6: { notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'], displayText: 'Notes C, D, E, F, G, A and B from one octave' },
+    mode7: { notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'], displayText: 'One Octave (notes C4 to C5)' },  // First 7 notes
+    mode8: { notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'], displayText: 'One Octave (notes C4 to C5)' }  // Entire Octave C4 to C5
 };
 
-const degreeMap = {
-  'C': '1st',
-  'D': '2nd',
-  'E': '3rd',
-  'F': '4th',
-  'G': '5th',
-  'A': '6th',
-  'B': '7th'
+let currentMode;
+let currentScore = 0;
+let currentNoteIndex = 0;
+let currentNote;
+let noteOptions = [];
+let noteAnswerButtons = [];
+let correctAnswer;
+
+// Get elements from HTML
+const backButton = document.getElementById('backButton');
+const resetScoreButton = document.getElementById('resetScoreButton');
+const nextButton = document.getElementById('nextButton');
+const noteRangeText = document.getElementById('noteRange');
+const noteDisplay = document.getElementById('noteDisplay');
+const noteOptionsDiv = document.getElementById('noteOptions');
+const currentScoreText = document.getElementById('currentScore');
+const startScreen = document.getElementById('startScreen');
+const gameScreen = document.getElementById('gameScreen');
+const modeButtons = {
+    mode1: document.getElementById('mode1'),
+    mode2: document.getElementById('mode2'),
+    mode3: document.getElementById('mode3'),
+    mode4: document.getElementById('mode4'),
+    mode5: document.getElementById('mode5'),
+    mode6: document.getElementById('mode6'),
+    mode7: document.getElementById('mode7'),
+    mode8: document.getElementById('mode8')
 };
 
-let currentNotes = [];
-let currentAnswer = '';
-let audio = new Audio();
-let showDegrees = false;
-let currentMode = 7;
-let isAnswered = false;
-
-let correct = 0;
-let incorrect = 0;
-
-const startScreen = document.getElementById('start-screen');
-const gameScreen = document.getElementById('game-screen');
-const noteButtonsContainer = document.getElementById('note-buttons-container');
-const nextButton = document.getElementById('next-button');
-const resetScoreBtn = document.getElementById('reset-score');
-const backButton = document.getElementById('back-button');
-const displayNotesBtn = document.getElementById('display-notes');
-const displayDegreesBtn = document.getElementById('display-degrees');
-const promptText = document.getElementById('prompt');
-const correctCount = document.getElementById('correct-count');
-const incorrectCount = document.getElementById('incorrect-count');
-const totalCount = document.getElementById('total-count');
-const accuracyDisplay = document.getElementById('accuracy');
-
-function getNoteName(file) {
-  for (const [name, files] of Object.entries(noteMap)) {
-    if (files.includes(file)) return name;
-  }
-  return '';
+// Function to show the start screen
+function showStartScreen() {
+    startScreen.style.display = "flex";
+    gameScreen.style.display = "none";
 }
 
-function getRandomNote() {
-  const index = Math.floor(Math.random() * currentNotes.length);
-  return currentNotes[index];
+// Function to show the game screen
+function showGameScreen() {
+    startScreen.style.display = "none";
+    gameScreen.style.display = "flex";
 }
 
-function playNote(note) {
-  audio.src = `audio/${note}.mp3`;
-  audio.play();
+// Function to start the game with a specific mode
+function startGame(mode) {
+    currentMode = mode;
+    currentScore = 0;
+    currentNoteIndex = 0;
+    noteOptions = [...modes[mode].notes];
+    correctAnswer = null;
+    noteAnswerButtons = [];
+    nextButton.disabled = true;
+    showGameScreen();
+    updateNoteDisplay();
+    nextNote();
 }
 
-function setupGame() {
-  const keys = Object.keys(noteMap).slice(0, currentMode === 8 ? 7 : currentMode);
-  currentNotes = keys.map(k => noteMap[k][0]);
-  if (currentMode === 8) currentNotes.push('c5');
-
-  buildNoteButtons(keys);
-  newRound();
+// Update the note display text according to the mode selected
+function updateNoteDisplay() {
+    noteRangeText.textContent = modes[currentMode].displayText;
 }
 
-function buildNoteButtons(keys) {
-  noteButtonsContainer.innerHTML = '';
-  keys.forEach(note => {
-    const btn = document.createElement('button');
-    btn.className = 'blue-button';
-    btn.setAttribute('data-note', note);
-    btn.textContent = showDegrees ? degreeMap[note] : note;
-    btn.addEventListener('click', () => handleAnswer(note, btn));
-    noteButtonsContainer.appendChild(btn);
-  });
-}
-
-function handleAnswer(note, btn) {
-  if (isAnswered) return;
-
-  const correctNoteName = getNoteName(currentAnswer);
-  const isCorrect = note === correctNoteName;
-
-  btn.classList.add(isCorrect ? 'correct' : 'incorrect');
-  Array.from(noteButtonsContainer.children).forEach(b => {
-    b.disabled = true;
-    if (b.getAttribute('data-note') === correctNoteName) {
-      b.classList.add('correct');
+// Handle logic for next note
+function nextNote() {
+    if (currentNoteIndex < noteOptions.length) {
+        currentNote = noteOptions[currentNoteIndex];
+        playNoteAudio(currentNote);  // Assuming playNoteAudio function exists to play the corresponding audio
+        generateAnswerOptions();
     }
-  });
-
-  if (isCorrect) {
-    correct++;
-  } else {
-    incorrect++;
-  }
-
-  updateScore();
-  isAnswered = true;
-  nextButton.disabled = false;
 }
 
-function newRound() {
-  isAnswered = false;
-  nextButton.disabled = true;
-  Array.from(noteButtonsContainer.children).forEach(b => {
-    b.disabled = false;
-    b.classList.remove('correct', 'incorrect');
-  });
-
-  currentAnswer = getRandomNote();
-  playNote(currentAnswer);
+// Generate the possible answer options for the note being played
+function generateAnswerOptions() {
+    noteAnswerButtons.forEach(button => button.remove());  // Remove previous answer buttons
+    noteAnswerButtons = [];
+    const randomAnswers = generateRandomAnswers();
+    randomAnswers.forEach(answer => {
+        const button = document.createElement('button');
+        button.textContent = answer;
+        button.onclick = () => checkAnswer(answer);
+        noteAnswerButtons.push(button);
+        noteOptionsDiv.appendChild(button);
+    });
 }
 
-function updateScore() {
-  const total = correct + incorrect;
-  const accuracy = total ? ((correct / total) * 100).toFixed(1) : '0.0';
-  correctCount.textContent = correct;
-  incorrectCount.textContent = incorrect;
-  totalCount.textContent = total;
-  accuracyDisplay.textContent = `${accuracy}%`;
+// Generate random answers based on the note options
+function generateRandomAnswers() {
+    const answers = [...noteOptions];
+    answers.push(correctAnswer);
+    shuffle(answers);
+    return answers.slice(0, 4);  // Limit to 4 options
 }
 
-document.querySelectorAll('.mode-button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    currentMode = parseInt(btn.getAttribute('data-mode'));
-    startScreen.classList.add('hidden');
-    gameScreen.classList.remove('hidden');
-    setupGame();
-  });
-});
-
-nextButton.addEventListener('click', newRound);
-resetScoreBtn.addEventListener('click', () => {
-  correct = 0;
-  incorrect = 0;
-  updateScore();
-});
-backButton.addEventListener('click', () => {
-  gameScreen.classList.add('hidden');
-  startScreen.classList.remove('hidden');
-  noteButtonsContainer.innerHTML = '';
-  correct = incorrect = 0;
-  updateScore();
-});
-
-document.getElementById('play-reference').addEventListener('click', () => {
-  playNote('c4');
-});
-document.getElementById('replay-note').addEventListener('click', () => {
-  playNote(currentAnswer);
-});
-
-displayNotesBtn.addEventListener('click', () => {
-  showDegrees = false;
-  displayNotesBtn.classList.add('selected');
-  displayDegreesBtn.classList.remove('selected');
-  updateButtonLabels();
-});
-displayDegreesBtn.addEventListener('click', () => {
-  showDegrees = true;
-  displayDegreesBtn.classList.add('selected');
-  displayNotesBtn.classList.remove('selected');
-  updateButtonLabels();
-});
-
-function updateButtonLabels() {
-  Array.from(noteButtonsContainer.children).forEach(btn => {
-    const note = btn.getAttribute('data-note');
-    btn.textContent = showDegrees ? degreeMap[note] : note;
-  });
+// Shuffle the answers array
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
 }
+
+// Check if the answer selected is correct
+function checkAnswer(selectedAnswer) {
+    if (selectedAnswer === correctAnswer) {
+        currentScore++;
+        currentScoreText.textContent = `Score: ${currentScore}`;
+    }
+    nextButton.disabled = false;
+}
+
+// Play the note audio (placeholders for now)
+function playNoteAudio(note) {
+    // Play corresponding audio for the note (assume audio files are named as the note names)
+    const audio = new Audio(`audio/${note}.mp3`);
+    audio.play();
+    correctAnswer = note;  // Set the correct answer to the current note being played
+}
+
+// Handle back button click
+backButton.addEventListener('click', showStartScreen);
+
+// Handle reset score button click
+resetScoreButton.addEventListener('click', () => {
+    currentScore = 0;
+    currentScoreText.textContent = `Score: ${currentScore}`;
+    nextButton.disabled = true;
+});
+
+// Handle mode button clicks
+Object.keys(modeButtons).forEach(mode => {
+    modeButtons[mode].addEventListener('click', () => startGame(mode));
+});
+
+// Handle next button click
+nextButton.addEventListener('click', () => {
+    currentNoteIndex++;
+    if (currentNoteIndex < noteOptions.length) {
+        nextNote();
+    } else {
+        alert('Game Over! Your score is ' + currentScore);
+        showStartScreen();
+    }
+});
+
+// Initialize the app
+showStartScreen();
