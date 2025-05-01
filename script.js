@@ -28,16 +28,14 @@ const noteOptionsDiv = document.getElementById('noteOptions');
 const currentScoreText = document.getElementById('currentScore');
 const startScreen = document.getElementById('startScreen');
 const gameScreen = document.getElementById('gameScreen');
-const modeButtons = {
-    mode1: document.getElementById('mode1'),
-    mode2: document.getElementById('mode2'),
-    mode3: document.getElementById('mode3'),
-    mode4: document.getElementById('mode4'),
-    mode5: document.getElementById('mode5'),
-    mode6: document.getElementById('mode6'),
-    mode7: document.getElementById('mode7'),
-    mode8: document.getElementById('mode8')
-};
+document.querySelectorAll('.mode-button').forEach(button => {
+    button.addEventListener('click', () => {
+        const modeNumber = button.getAttribute('data-mode');
+        const modeKey = 'mode' + modeNumber;
+        startGame(modeKey);
+    });
+});
+
 
 // Function to show the start screen
 function showStartScreen() {
@@ -136,10 +134,7 @@ resetScoreButton.addEventListener('click', () => {
     nextButton.disabled = true;
 });
 
-// Handle mode button clicks
-Object.keys(modeButtons).forEach(mode => {
-    modeButtons[mode].addEventListener('click', () => startGame(mode));
-});
+
 
 // Handle next button click
 nextButton.addEventListener('click', () => {
