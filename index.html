@@ -9,31 +9,40 @@
 <body>
   <div id="start-screen">
     <h1>Relative Pitch Game</h1>
-    <p>Select note range:</p>
-    <button onclick="startGame(2)">First 2 notes</button>
-    <button onclick="startGame(3)">First 3 notes</button>
-    <button onclick="startGame(4)">First 4 notes</button>
-    <button onclick="startGame(5)">First 5 notes</button>
-    <button onclick="startGame(6)">First 6 notes</button>
-    <button onclick="startGame(7)">First 7 notes</button>
-    <button onclick="startGame(8)">Entire Octave (C4–C5)</button>
+    <p>Select the number of notes to use:</p>
+    <div id="mode-buttons">
+      <button onclick="startGame(2)">First 2 notes</button>
+      <button onclick="startGame(3)">First 3 notes</button>
+      <button onclick="startGame(4)">First 4 notes</button>
+      <button onclick="startGame(5)">First 5 notes</button>
+      <button onclick="startGame(6)">First 6 notes</button>
+      <button onclick="startGame(7)">First 7 notes</button>
+      <button onclick="startGame(8)">Entire Octave (C4–C5)</button>
+    </div>
   </div>
 
-  <div id="game-screen" class="hidden">
+  <div id="game-screen" style="display: none;">
+    <h2 id="question">What note is this?</h2>
+
+    <div id="toggle-buttons">
+      <button id="noteModeBtn" class="active" onclick="setDisplayMode('note')">Notes</button>
+      <button id="degreeModeBtn" onclick="setDisplayMode('degree')">Scale Degrees</button>
+    </div>
+
+    <div id="note-buttons"></div>
+
     <div id="controls">
-      <button onclick="playReference()">Play Reference (C4)</button>
-      <button onclick="playCurrentNote()">Replay</button>
-      <div id="toggle-buttons">
-        <button onclick="setLabelMode('note')" id="noteBtn" class="active">Notes</button>
-        <button onclick="setLabelMode('degree')" id="degreeBtn">Scale Degrees</button>
-      </div>
-      <button onclick="goBack()" id="back-btn">Back</button>
+      <button onclick="playReferenceNote()">Play Reference Note (C)</button>
+      <button onclick="playNote()">Replay Note</button>
+      <button id="next-button" onclick="nextNote()" disabled>Next</button>
+    </div>
+
+    <div id="score">Score: 0 / 0</div>
+
+    <div class="bottom-buttons">
+      <button onclick="goBack()">Back</button>
       <button onclick="resetScore()">Reset Score</button>
     </div>
-    <div id="note-buttons"></div>
-    <p id="feedback"></p>
-    <p id="score">Score: 0/0</p>
-    <button id="next-btn" class="disabled" onclick="nextQuestion()" disabled>Next</button>
   </div>
 
   <script src="script.js"></script>
